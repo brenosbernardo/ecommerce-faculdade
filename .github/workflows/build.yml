@@ -42,34 +42,10 @@ jobs:
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      # Depuração: listar o conteúdo do diretório
-      - name: List directory contents
-        shell: powershell
-        run: dir
-
-      # Instalar o ReportGenerator (necessário para cobertura de teste)
-      - name: Install ReportGenerator
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool
-          
-      - name: Run SonarQube analysis with coverage
+      - name: Build and analyze
         shell: powershell
         run: |
           cd Ecommerce.Backend\Ecommerce.API
-          
-          # Início da análise SonarQube
-          ..\..\.sonar\scanner\dotnet-sonarscanner begin /k:"chatbot" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.scanner.scanAll=false /d:sonar.coverageReportPaths="TestResults/coverage.cobertura.xml"
-          
-          # Build do projeto
+          ..\..\.sonar\scanner\dotnet-sonarscanner begin /k:"chatbot" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.scanner.scanAll=false
           dotnet build
-          
-          # Execução dos testes com cobertura
-          dotnet test --collect:"XPlat Code Coverage" --results-directory:./TestResults
-          
-          # Depurar: listar resultados dos testes
-          dir ./TestResults
-          
-          # Conversão do relatório de cobertura
-          reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:TestResults/CoverageReport -reporttypes:Cobertura
-          
-          # Finalização da análise SonarQube
           ..\..\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
